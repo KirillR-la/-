@@ -7,42 +7,38 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; width: 100%; background: #000; overflow-x: hidden; font-family: 'Segoe UI', sans-serif; }
-        canvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
-        .container { position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
+        body, html { height: 100%; width: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
+        
+        /* Кнопка входа */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 500; display: flex; justify-content: center; align-items: center;
+        }
+        #start-btn {
+            padding: 20px 40px; font-size: 24px; background: #ff3399; color: white;
+            border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px #ff3399;
+        }
+
+        canvas { display: none; position: fixed; top: 0; left: 0; z-index: 1; }
+        .container { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
         #countdown { font-size: 25vw; color: #0f0; display: none; font-weight: bold; }
         #gif-stage { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: black; justify-content: center; align-items: center; z-index: 100; }
         #gif-stage img { max-width: 100%; max-height: 100%; }
         #final-wish { display: none; z-index: 30; flex-direction: column; align-items: center; width: 100%; }
         
-        #word-wish { font-size: 10vw; font-weight: bold; color: #fff; text-shadow: 0 0 15px #ff0066; margin-bottom: 10px; height: 1.2em; transition: opacity 0.5s; }
-        .photo-frame { width: 300px; height: 400px; background: white; padding: 10px 10px 40px 10px; border-radius: 5px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); margin-bottom: 30px; }
+        #word-wish { font-size: 10vw; font-weight: bold; text-shadow: 0 0 15px #ff0066; margin-bottom: 20px; height: 1.2em; transition: opacity 0.5s; }
+        .photo-frame { width: 320px; height: 420px; background: white; padding: 10px 10px 40px 10px; border-radius: 5px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         #current-photo { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.5s; }
-
-        /* Кнопка звука */
-        #audio-btn {
-            background: #fff;
-            color: #ff3399;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: transform 0.2s, opacity 1s;
-            opacity: 0; /* Сначала скрыта */
-        }
-        #audio-btn:hover { transform: scale(1.05); background: #f0f0f0; }
     </style>
 </head>
 <body>
+
+    <div id="start-overlay">
+        <button id="start-btn" onclick="initPresentation()">Открыть поздравление 🌸</button>
+    </div>
+
     <canvas id="matrix"></canvas>
-    
-    <audio id="congratulation-audio" src="track.mp3"></audio>
+    <audio id="bg-music" src="track.mp3" loop></audio>
 
     <div class="container">
         <div id="countdown">3</div>
@@ -51,72 +47,62 @@
             <div class="photo-frame">
                 <img id="current-photo" src="1.jpg">
             </div>
-            <button id="audio-btn" onclick="playAudio()">
-                <span>▶ Послушать поздравление</span>
-            </button>
         </div>
     </div>
+
     <div id="gif-stage"><img src="gift.gif"></div>
 
     <script>
         const wishes = ["Сияй!", "Люби!", "Мечтай!", "Цвети!", "Радуй!", "Улыбайся!", "Будь!", "Сверкай!", "Очаровывай!", "Побеждай!", "Восхищай!"];
         const totalPhotos = 11;
-        let idx = 1;
+        let mInt;
 
-        function playAudio() {
-            const audio = document.getElementById('congratulation-audio');
-            audio.play();
-            document.getElementById('audio-btn').innerHTML = "<span>🎵 Звучит для тебя...</span>";
+        function initPresentation() {
+            // Скрываем оверлей и запускаем звук
+            document.getElementById('start-overlay').style.display = 'none';
+            const audio = document.getElementById('bg-music');
+            audio.play().catch(e => console.log("Звук заблокирован"));
+
+            // Показываем канвас и запускаем Матрицу
+            const c = document.getElementById('matrix');
+            c.style.display = 'block';
+            startMatrix(c);
+
+            // Запускаем таймер перехода
+            setTimeout(runSequence, 5000);
         }
 
-        function startSlideshow() {
-            // Показываем кнопку звука через 2 секунды после начала шоу
-            setTimeout(() => { document.getElementById('audio-btn').style.opacity = '1'; }, 2000);
-
-            setInterval(() => {
-                const img = document.getElementById('current-photo');
-                const word = document.getElementById('word-wish');
-                img.style.opacity = '0';
-                word.style.opacity = '0';
-                setTimeout(() => {
-                    idx = (idx % totalPhotos) + 1;
-                    img.src = idx + ".jpg";
-                    word.textContent = wishes[idx - 1];
-                    img.style.opacity = '1';
-                    word.style.opacity = '1';
-                    confetti({ particleCount: 10, spread: 30, origin: { y: 0.8 }, colors: ['#ff3399'] });
-                }, 500);
-            }, 2500);
+        function startMatrix(c) {
+            const ctx = c.getContext('2d');
+            c.height = window.innerHeight; c.width = window.innerWidth;
+            const chars = "ЮЛЬКАЧУМАК8".split("");
+            const drops = Array(Math.floor(c.width/16)).fill(1);
+            
+            mInt = setInterval(() => {
+                ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(0,0,c.width,c.height);
+                ctx.fillStyle = '#0F0'; ctx.font = '16px monospace';
+                drops.forEach((y, i) => {
+                    const text = chars[Math.floor(Math.random()*chars.length)];
+                    ctx.fillText(text, i*16, y*16);
+                    if(y*16 > c.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
+                });
+            }, 35);
         }
 
-        // --- МАТРИЦА ---
-        const c = document.getElementById('matrix'), ctx = c.getContext('2d');
-        c.height = window.innerHeight; c.width = window.innerWidth;
-        const chars = "ЮЛЬКАЧУМАК8".split("");
-        const drops = Array(Math.floor(c.width/16)).fill(1);
-        function draw() {
-            ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(0,0,c.width,c.height);
-            ctx.fillStyle = '#0F0'; ctx.font = '16px monospace';
-            drops.forEach((y, i) => {
-                const text = chars[Math.floor(Math.random()*chars.length)];
-                ctx.fillText(text, i*16, y*16);
-                if(y*16 > c.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            });
-        }
-        let mInt = setInterval(draw, 35);
-
-        // --- ТАЙМИНГИ ---
-        setTimeout(() => {
-            clearInterval(mInt); c.style.display = 'none';
-            document.getElementById('countdown').style.display = 'block';
+        function runSequence() {
+            clearInterval(mInt);
+            document.getElementById('matrix').style.display = 'none';
+            const cd = document.getElementById('countdown');
+            cd.style.display = 'block';
+            
             let t = 3;
             let ti = setInterval(() => {
-                t--; 
-                if(t > 0) document.getElementById('countdown').textContent = t;
+                t--;
+                if(t > 0) cd.textContent = t;
                 else {
                     clearInterval(ti);
-                    document.getElementById('countdown').style.display = 'none';
+                    cd.style.display = 'none';
                     document.getElementById('gif-stage').style.display = 'flex';
                     setTimeout(() => {
                         document.getElementById('gif-stage').style.display = 'none';
@@ -127,7 +113,22 @@
                     }, 3000);
                 }
             }, 1000);
-        }, 5000);
+        }
+
+        function startSlideshow() {
+            let idx = 1;
+            setInterval(() => {
+                const img = document.getElementById('current-photo');
+                const word = document.getElementById('word-wish');
+                img.style.opacity = '0'; word.style.opacity = '0';
+                setTimeout(() => {
+                    idx = (idx % totalPhotos) + 1;
+                    img.src = idx + ".jpg";
+                    word.textContent = wishes[idx - 1];
+                    img.style.opacity = '1'; word.style.opacity = '1';
+                }, 500);
+            }, 2500);
+        }
     </script>
 </body>
 </html>
