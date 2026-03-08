@@ -1,48 +1,82 @@
-<style>
-    /* Добавь это в секцию стилей, чтобы картинка менялась плавно */
-    #current-photo {
-        width: 100%;
-        height: 450px;
-        object-fit: cover;
-        border: 1px solid #ddd;
-        transition: opacity 0.3s ease-in-out; /* Плавное исчезновение */
-    }
-</style>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>С 8 Марта, Юлька Чумак!</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { 
+            height: 100%; width: 100%; 
+            background: #000; 
+            overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+        }
+        
+        canvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
 
-<script>
-    let currentIdx = 1;
-    const totalPhotos = 11;
+        .container {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
 
-    function changeSlide(step) {
-        const img = document.getElementById('current-photo');
-        const counter = document.getElementById('photo-counter');
-        
-        // 1. Сначала меняем индекс
-        currentIdx += step;
-        if (currentIdx > totalPhotos) currentIdx = 1;
-        if (currentIdx < 1) currentIdx = totalPhotos;
-        
-        // 2. Делаем картинку прозрачной перед заменой
-        img.style.opacity = '0';
-        
-        // 3. Ждем мгновение и меняем источник
-        setTimeout(() => {
-            // Добавляем случайный параметр в конце ссылки, чтобы браузер не брал из кэша старое фото
-            img.src = `${currentIdx}.jpg?t=${new Date().getTime()}`;
-            
-            // Как только фото загрузится — проявляем его
-            img.onload = () => {
-                img.style.opacity = '1';
-                counter.textContent = `${currentIdx} / ${totalPhotos}`;
-            };
-        }, 300);
-        
-        // Эффект конфетти при нажатии
-        confetti({ 
-            particleCount: 15, 
-            spread: 40, 
-            origin: { y: 0.8 },
-            colors: ['#ff0066', '#ffffff'] 
-        });
-    }
-</script>
+        #countdown { font-size: 25vw; color: #0f0; display: none; font-weight: bold; }
+
+        #gif-stage {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: black;
+            justify-content: center; align-items: center;
+            z-index: 100;
+        }
+        #gif-stage img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        #final-wish { 
+            display: none; 
+            z-index: 30; 
+            width: 100%; 
+            height: 100%; 
+            padding-top: 5vh; 
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #final-wish h1 {
+            font-size: 6vw;
+            color: white;
+            text-shadow: 0 0 15px #ff0066, 2px 2px 5px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+        }
+
+        /* Исправленный слайдер */
+        .slider-wrapper {
+            position: relative;
+            width: 90%;
+            max-width: 450px;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        .photo-card {
+            background: white;
+            padding: 15px 15px 50px 15px;
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            position: relative;
+        }
+
+        #current-photo {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border: 1px solid #ddd;
