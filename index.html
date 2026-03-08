@@ -1,205 +1,48 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Для Юльки Чумак</title>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; width: 100%; background: #000; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; }
+<style>
+    /* Добавь это в секцию стилей, чтобы картинка менялась плавно */
+    #current-photo {
+        width: 100%;
+        height: 450px;
+        object-fit: cover;
+        border: 1px solid #ddd;
+        transition: opacity 0.3s ease-in-out; /* Плавное исчезновение */
+    }
+</style>
+
+<script>
+    let currentIdx = 1;
+    const totalPhotos = 11;
+
+    function changeSlide(step) {
+        const img = document.getElementById('current-photo');
+        const counter = document.getElementById('photo-counter');
         
-        canvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
-
-        .container {
-            position: relative;
-            z-index: 10;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-align: center;
-        }
-
-        #countdown { font-size: 25vw; color: #0f0; display: none; font-weight: bold; }
-
-        #gif-stage {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: black;
-            justify-content: center; align-items: center;
-            z-index: 100;
-        }
-        #gif-stage img { max-width: 100%; max-height: 100%; object-fit: contain; }
-
-        #final-wish { display: none; z-index: 30; width: 100%; height: 100%; padding-top: 5vh; }
-        #final-wish h1 {
-            font-size: 6vw;
-            color: white;
-            text-shadow: 0 0 15px #ff0066;
-            margin-bottom: 20px;
-        }
-
-        /* Слайдер */
-        .slider-container {
-            position: relative;
-            width: 90%;
-            max-width: 500px;
-            margin: 0 auto;
-            opacity: 0;
-            transition: opacity 2s;
-        }
-
-        .photo-card {
-            background: white;
-            padding: 15px 15px 50px 15px;
-            border-radius: 5px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-
-        .photo-card img {
-            width: 100%;
-            height: 450px;
-            object-fit: cover;
-            border: 1px solid #ddd;
-        }
-
-        .nav-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.8);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            font-weight: bold;
-            color: #ff3399;
-            z-index: 40;
-            transition: 0.3s;
-        }
-        .nav-btn:hover { background: white; transform: translateY(-50%) scale(1.1); }
-        .prev { left: -20px; }
-        .next { right: -20px; }
-
-        #photo-counter {
-            margin-top: 15px;
-            font-size: 1.2rem;
-            background: rgba(0,0,0,0.3);
-            padding: 5px 15px;
-            border-radius: 20px;
-        }
-    </style>
-</head>
-<body>
-
-    <canvas id="matrix"></canvas>
-
-    <div class="container">
-        <div id="countdown">3</div>
+        // 1. Сначала меняем индекс
+        currentIdx += step;
+        if (currentIdx > totalPhotos) currentIdx = 1;
+        if (currentIdx < 1) currentIdx = totalPhotos;
         
-        <div id="final-wish">
-            <h1>Юлька, с 8 Марта! 🌸</h1>
-            
-            <div class="slider-container" id="slider">
-                <button class="nav-btn prev" onclick="changeSlide(-1)">❮</button>
-                <div class="photo-card">
-                    <img id="current-photo" src="1.jpg" alt="Фото">
-                </div>
-                <button class="nav-btn next" onclick="changeSlide(1)">❯</button>
-                <div id="photo-counter">1 / 11</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="gif-stage">
-        <img src="gift.gif" alt="Surprise">
-    </div>
-
-    <script>
-        // --- МАТРИЦА ---
-        const canvas = document.getElementById('matrix');
-        const ctx = canvas.getContext('2d');
-        canvas.height = window.innerHeight;
-        canvas.width = window.innerWidth;
-        const characters = "ЮЛЬКАЧУМАК8МАРТА";
-        const fontSize = 18;
-        const columns = canvas.width / fontSize;
-        const drops = Array(Math.floor(columns)).fill(1);
-
-        function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#0F0';
-            ctx.font = fontSize + 'px monospace';
-            for (let i = 0; i < drops.length; i++) {
-                const text = characters.charAt(Math.floor(Math.random() * characters.length));
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            }
-        }
-        let matrixInterval = setInterval(drawMatrix, 40);
-
-        // --- ЛОГИКА СЛАЙДЕРА ---
-        let currentIdx = 1;
-        const totalPhotos = 11;
-
-        function changeSlide(step) {
-            currentIdx += step;
-            if (currentIdx > totalPhotos) currentIdx = 1;
-            if (currentIdx < 1) currentIdx = totalPhotos;
-            
-            const img = document.getElementById('current-photo');
-            img.style.opacity = 0;
-            setTimeout(() => {
-                img.src = `${currentIdx}.jpg`;
-                img.style.opacity = 1;
-                document.getElementById('photo-counter').textContent = `${currentIdx} / ${totalPhotos}`;
-            }, 200);
-            
-            confetti({ particleCount: 20, spread: 50, origin: { y: 0.8 } });
-        }
-
-        // --- ТАЙМИНГИ ---
+        // 2. Делаем картинку прозрачной перед заменой
+        img.style.opacity = '0';
+        
+        // 3. Ждем мгновение и меняем источник
         setTimeout(() => {
-            clearInterval(matrixInterval);
-            canvas.style.display = 'none';
-            document.getElementById('countdown').style.display = 'block';
+            // Добавляем случайный параметр в конце ссылки, чтобы браузер не брал из кэша старое фото
+            img.src = `${currentIdx}.jpg?t=${new Date().getTime()}`;
             
-            let count = 3;
-            const timer = setInterval(() => {
-                count--;
-                if (count > 0) document.getElementById('countdown').textContent = count;
-                else {
-                    clearInterval(timer);
-                    document.getElementById('countdown').style.display = 'none';
-                    document.getElementById('gif-stage').style.display = 'flex';
-                    
-                    setTimeout(() => {
-                        document.getElementById('gif-stage').style.display = 'none';
-                        showFinal();
-                    }, 3000);
-                }
-            }, 1000);
-        }, 5000);
-
-        function showFinal() {
-            document.body.style.background = "radial-gradient(circle, #ff99cc 0%, #ff3399 100%)";
-            document.getElementById('final-wish').style.display = 'block';
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-            
-            setTimeout(() => {
-                const slider = document.getElementById('slider');
-                slider.style.opacity = '1';
-            }, 1000);
-        }
-    </script>
-</body>
-</html>
+            // Как только фото загрузится — проявляем его
+            img.onload = () => {
+                img.style.opacity = '1';
+                counter.textContent = `${currentIdx} / ${totalPhotos}`;
+            };
+        }, 300);
+        
+        // Эффект конфетти при нажатии
+        confetti({ 
+            particleCount: 15, 
+            spread: 40, 
+            origin: { y: 0.8 },
+            colors: ['#ff0066', '#ffffff'] 
+        });
+    }
+</script>
