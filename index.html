@@ -3,49 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8 Марта!</title>
+    <title>8 Марта для Юльки!</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; width: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
+        body, html { height: 100%; width: 100%; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
         canvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
-        .container { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        
+        .container { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
         #countdown { font-size: 25vw; color: #0f0; display: none; font-weight: bold; }
+        
         #gif-stage { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: black; justify-content: center; align-items: center; z-index: 100; }
-        #gif-stage img { max-width: 100%; max-height: 100%; }
+        #gif-stage img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
         #final-wish { display: none; z-index: 30; flex-direction: column; align-items: center; width: 100%; }
-        h1 { font-size: 8vw; margin-bottom: 20px; text-shadow: 0 0 15px #ff0066; }
-        .slider { position: relative; width: 300px; height: 400px; background: white; padding: 10px; border-radius: 5px; }
-        #current-photo { width: 100%; height: 100%; object-fit: cover; }
-        .nav-btn { position: absolute; top: 50%; width: 40px; height: 40px; background: #ff3399; color: white; border: none; border-radius: 50%; cursor: pointer; font-size: 20px; z-index: 200; }
-        .prev { left: -50px; }
-        .next { right: -50px; }
+        h1 { font-size: 7vw; margin-bottom: 30px; text-shadow: 0 0 15px #ff0066; color: white; }
+
+        /* Контейнер автоматического слайдера */
+        .photo-frame {
+            width: 320px;
+            height: 420px;
+            background: white;
+            padding: 10px 10px 40px 10px;
+            border-radius: 5px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        #current-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.5s ease-in-out; /* Плавная смена за 0.5 сек */
+        }
     </style>
 </head>
 <body>
+
     <canvas id="matrix"></canvas>
+
     <div class="container">
         <div id="countdown">3</div>
         <div id="final-wish">
             <h1>С 8 Марта, Юлька! 🌸</h1>
-            <div class="slider">
-                <button class="nav-btn prev" onclick="changeSlide(-1)">❮</button>
+            <div class="photo-frame">
                 <img id="current-photo" src="1.jpg">
-                <button class="nav-btn next" onclick="changeSlide(1)">❯</button>
             </div>
         </div>
     </div>
-    <div id="gif-stage"><img src="gift.gif"></div>
+
+    <div id="gif-stage">
+        <img src="gift.gif">
+    </div>
 
     <script>
-        // Матрица
+        // --- 1. ЭФФЕКТ МАТРИЦЫ ---
         const c = document.getElementById('matrix'), ctx = c.getContext('2d');
         c.height = window.innerHeight; c.width = window.innerWidth;
         const chars = "ЮЛЬКАЧУМАК8".split("");
         const drops = Array(Math.floor(c.width/16)).fill(1);
         function draw() {
             ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(0,0,c.width,c.height);
-            ctx.fillStyle = '#0F0'; ctx.font = '16px arial';
+            ctx.fillStyle = '#0F0'; ctx.font = '16px monospace';
             drops.forEach((y, i) => {
                 const text = chars[Math.floor(Math.random()*chars.length)];
                 ctx.fillText(text, i*16, y*16);
@@ -55,34 +74,48 @@
         }
         let mInt = setInterval(draw, 35);
 
-        // Слайдер
+        // --- 2. АВТОМАТИЧЕСКИЙ СЛАЙДЕР ---
         let idx = 1;
-        function changeSlide(s) {
-            idx += s;
-            if(idx > 11) idx = 1; if(idx < 1) idx = 11;
-            document.getElementById('current-photo').src = idx + '.jpg';
-            confetti({ particleCount: 20, origin: { y: 0.8 } });
+        const totalPhotos = 11;
+        
+        function startSlideshow() {
+            setInterval(() => {
+                const img = document.getElementById('current-photo');
+                img.style.opacity = '0'; // Гасим старое фото
+                
+                setTimeout(() => {
+                    idx++;
+                    if(idx > totalPhotos) idx = 1; // Возвращаемся к первому
+                    img.src = idx + '.jpg';
+                    img.style.opacity = '1'; // Проявляем новое
+                    
+                    // Небольшой салют при каждой смене
+                    confetti({ particleCount: 10, spread: 30, origin: { y: 0.8 }, colors: ['#ff3399'] });
+                }, 500); // Время на исчезновение
+            }, 2000); // Интервал 2 секунды
         }
 
-        // Логика
+        // --- 3. ЦЕПОЧКА СОБЫТИЙ ---
         setTimeout(() => {
             clearInterval(mInt); c.style.display = 'none';
             const cd = document.getElementById('countdown'); cd.style.display = 'block';
             let t = 3;
             let ti = setInterval(() => {
-                t--; if(t>0) cd.textContent = t;
+                t--; if(t > 0) cd.textContent = t;
                 else {
                     clearInterval(ti); cd.style.display = 'none';
                     document.getElementById('gif-stage').style.display = 'flex';
+                    
                     setTimeout(() => {
                         document.getElementById('gif-stage').style.display = 'none';
-                        document.body.style.background = "linear-gradient(#ff99cc, #ff3399)";
+                        document.body.style.background = "radial-gradient(circle, #ff99cc, #ff3399)";
                         document.getElementById('final-wish').style.display = 'flex';
                         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                        startSlideshow(); // Запускаем авто-листание
                     }, 3000);
                 }
             }, 1000);
-        }, 4000);
+        }, 5000);
     </script>
 </body>
 </html>
