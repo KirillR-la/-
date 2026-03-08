@@ -1,1 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>С 8 Марта!</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { 
+            height: 100%; 
+            background: #1a1a2e; 
+            font-family: 'Arial', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden; 
+            transition: background 1s;
+        }
 
+        #stage {
+            text-align: center;
+            z-index: 10;
+        }
+
+        /* Отсчет */
+        #countdown {
+            font-size: 30vw;
+            color: #ff3399;
+            font-weight: bold;
+        }
+
+        /* Гифка */
+        #gif-stage {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            justify-content: center;
+            align-items: center;
+        }
+        #gif-stage img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* Финал */
+        #final-wish {
+            display: none;
+            animation: bounceIn 1.2s ease-out;
+        }
+        #final-wish h1 {
+            font-size: 12vw;
+            color: white;
+            text-shadow: 0 0 20px #ff0066, 2px 2px 10px rgba(0,0,0,0.5);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="stage">
+        <div id="countdown">3</div>
+        
+        <div id="final-wish">
+            <h1>Юлька, с 8 Марта! 🌸</h1>
+        </div>
+    </div>
+
+    <div id="gif-stage">
+        <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJueW94dm5idm96eHBybmZ4eHh4eHh4eHh4eHh4eHh4eHh4eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26vUxArWpIDB2F8Y0/giphy.gif" alt="Surprise">
+    </div>
+
+    <script>
+        const countEl = document.getElementById('countdown');
+        const gifEl = document.getElementById('gif-stage');
+        const finalEl = document.getElementById('final-wish');
+        
+        let count = 3;
+
+        const timer = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countEl.textContent = count;
+            } else {
+                clearInterval(timer);
+                startShow();
+            }
+        }, 1000);
+
+        function startShow() {
+            countEl.style.display = 'none';
+            gifEl.style.display = 'flex';
+            
+            // Гифка на 3 секунды
+            setTimeout(() => {
+                gifEl.style.display = 'none';
+                showFinal();
+            }, 3000);
+        }
+
+        function showFinal() {
+            document.body.style.background = "linear-gradient(45deg, #ff3399, #ff99cc)";
+            finalEl.style.display = 'block';
+            
+            // Запуск конфетти
+            const duration = 5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+                // Разлетаются из двух точек по бокам
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+    </script>
+</body>
+</html>
