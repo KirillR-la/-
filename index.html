@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8 Марта для Юльки!</title>
+    <title>8 Марта!</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; width: 100%; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        body, html { height: 100%; width: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
         canvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
         .container { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
         #countdown { font-size: 25vw; color: #0f0; display: none; font-weight: bold; }
         #gif-stage { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: black; justify-content: center; align-items: center; z-index: 100; }
-        #gif-stage img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        #gif-stage img { max-width: 100%; max-height: 100%; }
         #final-wish { display: none; z-index: 30; flex-direction: column; align-items: center; width: 100%; }
-        h1 { font-size: 7vw; margin-bottom: 30px; text-shadow: 0 0 15px #ff0066; color: white; }
-        .photo-frame { width: 320px; height: 420px; background: white; padding: 10px 10px 40px 10px; border-radius: 5px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; }
-        #current-photo { width: 100%; height: 100%; object-fit: cover; opacity: 1; transition: opacity 0.4s ease-in-out; }
+        h1 { font-size: 7vw; margin-bottom: 30px; text-shadow: 0 0 15px #ff0066; }
+        .photo-frame { width: 320px; height: 420px; background: white; padding: 10px 10px 40px 10px; border-radius: 5px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        #current-photo { width: 100%; height: 100%; object-fit: cover; opacity: 1; transition: opacity 0.5s ease; }
     </style>
 </head>
 <body>
@@ -26,14 +26,23 @@
         <div id="final-wish">
             <h1>С 8 Марта, Юлька! 🌸</h1>
             <div class="photo-frame">
-                <img id="current-photo" src="1.jpg" alt="Photo">
+                <img id="current-photo" src="1.jpg">
             </div>
         </div>
     </div>
     <div id="gif-stage"><img src="gift.gif"></div>
 
     <script>
-        // --- МАТРИЦА ---
+        // 1. ПРЕДЗАГРУЗКА ФОТО (начинается сразу)
+        const totalPhotos = 11;
+        const images = [];
+        for (let i = 1; i <= totalPhotos; i++) {
+            const img = new Image();
+            img.src = i + ".jpg";
+            images.push(img); // Браузер начнет качать их в фон
+        }
+
+        // 2. МАТРИЦА
         const c = document.getElementById('matrix'), ctx = c.getContext('2d');
         c.height = window.innerHeight; c.width = window.innerWidth;
         const chars = "ЮЛЬКАЧУМАК8".split("");
@@ -50,34 +59,21 @@
         }
         let mInt = setInterval(draw, 35);
 
-        // --- АВТО-СЛАЙДЕР С ИСПРАВЛЕНИЕМ ---
+        // 3. СЛАЙДЕР
         let idx = 1;
-        const totalPhotos = 11;
-        
         function startSlideshow() {
             setInterval(() => {
                 const img = document.getElementById('current-photo');
-                
-                // 1. Начинаем исчезновение
-                img.style.opacity = '0'; 
-                
+                img.style.opacity = '0';
                 setTimeout(() => {
-                    idx++;
-                    if(idx > totalPhotos) idx = 1;
-                    
-                    // 2. Меняем путь и добавляем случайный параметр (?t=...), чтобы обмануть кэш
-                    const newSrc = idx + ".jpg?t=" + new Date().getTime();
-                    img.src = newSrc;
-                    
-                    // 3. Когда файл реально подгрузится — проявляем
-                    img.onload = () => {
-                        img.style.opacity = '1';
-                    };
-                }, 400); // время на исчезновение
-            }, 2500); // каждые 2.5 секунды
+                    idx = (idx % totalPhotos) + 1;
+                    img.src = idx + ".jpg"; // Берется уже из кэша
+                    img.style.opacity = '1';
+                }, 500);
+            }, 2500);
         }
 
-        // --- ЦЕПОЧКА ---
+        // 4. ТАЙМИНГИ
         setTimeout(() => {
             clearInterval(mInt); c.style.display = 'none';
             const cd = document.getElementById('countdown'); cd.style.display = 'block';
@@ -92,7 +88,7 @@
                         document.body.style.background = "radial-gradient(circle, #ff99cc, #ff3399)";
                         document.getElementById('final-wish').style.display = 'flex';
                         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                        startSlideshow(); 
+                        startSlideshow();
                     }, 3000);
                 }
             }, 1000);
